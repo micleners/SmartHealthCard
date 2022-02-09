@@ -137,14 +137,17 @@ namespace SmartHealthCard.Token.Algorithms
       //   return Result<string>.Fail("Unable to get certificate thumb-print as no certificate provided.");
 
       // we don't need to get X and Y when we provide the key - that info is contained in the key
+      // if we wanted to get them from the key - why can't we? Debug and check up above, Q.X and Q.Y are null :/
       Result<string> PointCoordinateXResult =
         Result<string>.Ok(
           // hardcoding here for ease of flow
-          Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("11XvRWy1I2S0EyJlyf_bWfw_TQ5CJJNLw78bHXNxcgw")));
+          "11XvRWy1I2S0EyJlyf_bWfw_TQ5CJJNLw78bHXNxcgw");
+      // Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("11XvRWy1I2S0EyJlyf_bWfw_TQ5CJJNLw78bHXNxcgw")));
         // this.GetPointCoordinateX();
       Result<string> PointCoordinateYResult = Result<string>.Ok(
         // hardcoding here for ease of flow
-        Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("eZXwxvO1hvCY0KucrPfKo7yAyMT6Ajc3N7OkAB6VYy8")));
+        "eZXwxvO1hvCY0KucrPfKo7yAyMT6Ajc3N7OkAB6VYy8");
+      // Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("eZXwxvO1hvCY0KucrPfKo7yAyMT6Ajc3N7OkAB6VYy8")));
         // this.GetPointCoordinateY();
       var CombinedResult = Result.Combine(PointCoordinateXResult, PointCoordinateYResult);
       if (CombinedResult.Failure)        

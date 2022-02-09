@@ -131,11 +131,13 @@ namespace SmartHealthCard.Token
     private SmartHealthCareJWSHeaderModel GetHeader(IAlgorithm Algorithm)
     {
       Result<string> KidResult =
-        Algorithm.GetKid();
+      Algorithm.GetKid();
 
       // we also tried hardcoding the kid directly from the key - that didn't work (generated smart card but card failed to decode)
         // Result<string>.Ok(
-        //   Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("3Kfdg-XwP-7gXyywtUfUADwBumDOPKMQx-iELL11W9s")));
+        //           "3Kfdg-XwP-7gXyywtUfUADwBumDOPKMQx-iELL11W9s");
+        // Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("3Kfdg-XwP-7gXyywtUfUADwBumDOPKMQx-iELL11W9s")));
+
       if (KidResult.Failure)
         throw new SmartHealthCardEncoderException(KidResult.ErrorMessage);
           

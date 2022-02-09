@@ -37,57 +37,88 @@ namespace SHC.EncoderDemo
       //Set the Version of FHIR in use
       string FhirVersion = "4.0.1";
 
-      //This library does not validate that the FHIR Bundle provided is valid FHIR, it only parses it as valid JSON.      
-      //I strongly suggest you use the FIRELY .NET SDK as found here: https://docs.fire.ly/projects/Firely-NET-SDK/index.html       
-      //See the FHIR SMART Health Card FHIR profile site here: http://build.fhir.org/ig/dvci/vaccine-credential-ig/branches/main/index.html   
+      //This library does not validate that the FHIR Bundle provided is valid FHIR, it only parses it as valid JSON.
+      //I strongly suggest you use the FIRELY .NET SDK as found here: https://docs.fire.ly/projects/Firely-NET-SDK/index.html
+      //See the FHIR SMART Health Card FHIR profile site here: http://build.fhir.org/ig/dvci/vaccine-credential-ig/branches/main/index.html
 
-      //Set a FHIR Bundle as a JSON string. 
+      //Set a FHIR Bundle as a JSON string.
       string FhirBundleJson = @"
                 {
-            ""ResourceType"": ""Bundle"",
-            ""Type"": ""collection"",
-            ""Entry"": [
-            {
-                ""FullUrl"": ""resource:0"",
-                ""Resource"": {
-                    ""ResourceType"": ""Patient"",
-                    ""Name"": [
-                    {
-                        ""Family"": ""DEVELOPMENTFIVE"",
-                        ""Given"": [
-                        ""WEB""
-                            ]
-                    }
-                    ],
-                    ""BirthDate"": ""01/01/1991""
-                }
-            },
-            {
-                ""FullUrl"": ""resource:1"",
-                ""Resource"": {
-                    ""ResourceType"": ""Immunization"",
-                    ""Status"": ""completed"",
-                    ""VaccineCode"": {
-                        ""Coding"": [
-                        {
-                            ""System"": ""http://hl7.org/fhir/sid/cvx"",
-                            ""Code"": ""212""
-                        }
-                        ]
-                    },
-                    ""Patient"": {
-                        ""Reference"": ""resource:0""
-                    },
-                    ""OccurrenceDateTime"": ""09/29/2021"",
-                    ""Performer"": [
-                    {
-                        ""Actor"": ""Hy-Vee Pella #1516""
-                    }
-                    ]
-                }
-            }
-            ]
-        }
+  ""resourceType"": ""Bundle"",
+      ""type"": ""collection"",
+      ""entry"": [
+      {
+          ""fullUrl"": ""resource:0"",
+          ""resource"": {
+              ""resourceType"": ""Patient"",
+              ""name"": [
+              {
+                  ""family"": ""Anyperson"",
+                  ""given"": [
+                  ""Jane"",
+                  ""C.""
+                      ]
+              }
+              ],
+              ""birthDate"": ""1961-01-20""
+          }
+      },
+      {
+          ""fullUrl"": ""resource:1"",
+          ""resource"": {
+              ""resourceType"": ""Immunization"",
+              ""status"": ""completed"",
+              ""vaccineCode"": {
+                  ""coding"": [
+                  {
+                      ""system"": ""http://hl7.org/fhir/sid/cvx"",
+                      ""code"": ""208""
+                  }
+                  ]
+              },
+              ""patient"": {
+                  ""reference"": ""resource:0""
+              },
+              ""occurrenceDateTime"": ""2021-01-01"",
+              ""performer"": [
+              {
+                  ""actor"": {
+                      ""display"": ""ABC General Hospital""
+                  }
+              }
+              ],
+              ""lotNumber"": ""0000002""
+          }
+      },
+      {
+          ""fullUrl"": ""resource:2"",
+          ""resource"": {
+              ""resourceType"": ""Immunization"",
+              ""status"": ""completed"",
+              ""vaccineCode"": {
+                  ""coding"": [
+                  {
+                      ""system"": ""http://hl7.org/fhir/sid/cvx"",
+                      ""code"": ""208""
+                  }
+                  ]
+              },
+              ""patient"": {
+                  ""reference"": ""resource:0""
+              },
+              ""occurrenceDateTime"": ""2021-01-29"",
+              ""performer"": [
+              {
+                  ""actor"": {
+                      ""display"": ""ABC General Hospital""
+                  }
+              }
+              ],
+              ""lotNumber"": ""0000008""
+          }
+      }
+      ]
+    }
         ";
 
       // Issuer obtained from: https://demo-portals.smarthealth.cards/DevPortal.html
@@ -153,7 +184,7 @@ namespace SHC.EncoderDemo
       string SmartHealthCardJwsToken = string.Empty;
       try
       {
-        //Get the Smart Health Card JWS Token 
+        //Get the Smart Health Card JWS Token
         SmartHealthCardJwsToken = await SmartHealthCardEncoder.GetTokenAsyncFromKeys(PublicKey, PrivateKey, SmartHealthCard);
       }
       catch (SmartHealthCardEncoderException EncoderException)
@@ -172,12 +203,12 @@ namespace SHC.EncoderDemo
 
       //Get list of SMART Health Card QR Codes images
       //Note: If the SMART Health Card JWS payload is large then it will be split up into multiple QR Code images.
-      //SMART Health Card QR Code scanners can scan each image in any order to obtain the whole SMART Health Card  
+      //SMART Health Card QR Code scanners can scan each image in any order to obtain the whole SMART Health Card
       List<Bitmap> QRCodeImageList = SmartHealthCardQRCodeEncoder.GetQRCodeList(SmartHealthCardJwsToken);
 
       var jws = SmartHealthCardQRCodeEncoder.GetQRCodeRawDataList(SmartHealthCardJwsToken);
 
-      //Write to file the SMART Health Card QR Codes images      
+      //Write to file the SMART Health Card QR Codes images
       for (int i = 0; i < QRCodeImageList.Count; i++)
       {
         QRCodeImageList[i].Save(@$"/Users/mleners/Developer/SmartHealthCard/QRCode-{i}.png", System.Drawing.Imaging.ImageFormat.Png);
