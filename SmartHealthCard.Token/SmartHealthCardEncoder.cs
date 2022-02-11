@@ -5,8 +5,11 @@ using SmartHealthCard.Token.Serializers.Jws;
 using SmartHealthCard.Token.Serializers.Shc;
 using SmartHealthCard.Token.JwsToken;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
+using SmartHealthCard.Token.Encoders;
 using SmartHealthCard.Token.Support;
 using SmartHealthCard.Token.Exceptions;
 
@@ -60,7 +63,27 @@ namespace SmartHealthCard.Token
       //Create the Elliptic Curve Signing Algorithm
       IAlgorithm Algorithm = new ES256Algorithm(Certificate, JsonSerializer);
       SmartHealthCareJWSHeaderModel Header = GetHeader(Algorithm);
-      IJwsEncoder JwsEncoder = GetEncoder(Certificate, Algorithm);
+      IJwsEncoder JwsEncoder = GetEncoder(Algorithm);
+      Result<string> EncoderResult = await JwsEncoder.EncodeAsync(Header, SmartHealthCard);
+      if (EncoderResult.Failure)
+        throw new SmartHealthCardEncoderException(EncoderResult.ErrorMessage);
+      return EncoderResult.Value;
+    }
+
+    /// <summary>
+    /// Get a SMART Health Card JWS Token
+    /// Requires a Certificate containing a private Elliptic Curve key using the P-256 curve
+    /// Requires a SMART Health Card payload in an object model form
+    /// </summary>
+    /// <param name="Certificate">Certificate containing a private Elliptic Curve key using the P-256 curve</param>
+    /// <param name="SmartHealthCard">SMART Health Card payload in an object model form</param>
+    /// <returns></returns>
+    public async Task<string> GetTokenAsyncFromKeys(ECDsa? PublicKey, ECDsa? PrivateKey, SmartHealthCardModel SmartHealthCard)
+    {
+      //Create the Elliptic Curve Signing Algorithm
+      IAlgorithm Algorithm = new ES256Algorithm(PublicKey, PrivateKey, JsonSerializer);
+      SmartHealthCareJWSHeaderModel Header = GetHeader(Algorithm);
+      IJwsEncoder JwsEncoder = GetEncoder(Algorithm);
       Result<string> EncoderResult = await JwsEncoder.EncodeAsync(Header, SmartHealthCard);
       if (EncoderResult.Failure)
         throw new SmartHealthCardEncoderException(EncoderResult.ErrorMessage);
@@ -80,7 +103,7 @@ namespace SmartHealthCard.Token
       //Create the Elliptic Curve Signing Algorithm
       IAlgorithm Algorithm = new ES256Algorithm(Certificate, JsonSerializer);
       SmartHealthCareJWSHeaderModel Header = GetHeader(Algorithm);
-      IJwsEncoder JwsEncoder = GetEncoder(Certificate, Algorithm);
+      IJwsEncoder JwsEncoder = GetEncoder(Algorithm);
 
       //Smart Health Card File object model holds many tokens
       SmartHealthCardFile SmartHealthCardFile = new SmartHealthCardFile();
@@ -99,7 +122,7 @@ namespace SmartHealthCard.Token
       return ToJsonResult.Value;
     }
 
-    private IJwsEncoder GetEncoder(X509Certificate2 Certificate, IAlgorithm Algorithm)
+    private IJwsEncoder GetEncoder(IAlgorithm Algorithm)
     {
       //Encode the JWS Token passing in the Header and Payload byte arrays from our two custom serializes 
       return new SmartHealthCardJwsEncoder(HeaderSerializer, PayloadSerializer, Algorithm);
@@ -107,7 +130,14 @@ namespace SmartHealthCard.Token
 
     private SmartHealthCareJWSHeaderModel GetHeader(IAlgorithm Algorithm)
     {
-      Result<string> KidResult = Algorithm.GetKid();
+      Result<string> KidResult =
+      Algorithm.GetKid();
+
+      // we also tried hardcoding the kid directly from the key - that didn't work (generated smart card but card failed to decode)
+        // Result<string>.Ok(
+        //           "3Kfdg-XwP-7gXyywtUfUADwBumDOPKMQx-iELL11W9s");
+        // Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("3Kfdg-XwP-7gXyywtUfUADwBumDOPKMQx-iELL11W9s")));
+
       if (KidResult.Failure)
         throw new SmartHealthCardEncoderException(KidResult.ErrorMessage);
           

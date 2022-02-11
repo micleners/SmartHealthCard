@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace SmartHealthCard.Token.Algorithms
 {
@@ -46,7 +47,7 @@ namespace SmartHealthCard.Token.Algorithms
     {                 
        this.PublicKey = PublicKey;
        this.PrivateKey = PrivateKey;
-      this.JsonSerializer = JsonSerializer;
+       this.JsonSerializer = JsonSerializer;
     }
 
     public string Name => "ES256";
@@ -131,11 +132,23 @@ namespace SmartHealthCard.Token.Algorithms
 
     public Result<string> GetKid()
     {
-      if (this.Certificate is null)
-        return Result<string>.Fail("Unable to get certificate thumb-print as no certificate provided.");
+      // we don't want to use a certificate when we're providing the key
+      // if (this.Certificate is null)
+      //   return Result<string>.Fail("Unable to get certificate thumb-print as no certificate provided.");
 
-      Result<string> PointCoordinateXResult = this.GetPointCoordinateX();           
-      Result<string> PointCoordinateYResult = this.GetPointCoordinateY();      
+      // we don't need to get X and Y when we provide the key - that info is contained in the key
+      // if we wanted to get them from the key - why can't we? Debug and check up above, Q.X and Q.Y are null :/
+      Result<string> PointCoordinateXResult =
+        Result<string>.Ok(
+          // hardcoding here for ease of flow
+          "11XvRWy1I2S0EyJlyf_bWfw_TQ5CJJNLw78bHXNxcgw");
+      // Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("11XvRWy1I2S0EyJlyf_bWfw_TQ5CJJNLw78bHXNxcgw")));
+        // this.GetPointCoordinateX();
+      Result<string> PointCoordinateYResult = Result<string>.Ok(
+        // hardcoding here for ease of flow
+        "eZXwxvO1hvCY0KucrPfKo7yAyMT6Ajc3N7OkAB6VYy8");
+      // Base64UrlEncoder.Encode(Encoding.ASCII.GetBytes("eZXwxvO1hvCY0KucrPfKo7yAyMT6Ajc3N7OkAB6VYy8")));
+        // this.GetPointCoordinateY();
       var CombinedResult = Result.Combine(PointCoordinateXResult, PointCoordinateYResult);
       if (CombinedResult.Failure)        
         return Result<string>.Fail(CombinedResult.ErrorMessage);
@@ -151,6 +164,7 @@ namespace SmartHealthCard.Token.Algorithms
         return ToJsonResult;
 
       byte[] Bytes = Hashers.SHA256Hasher.GetSHA256Hash(ToJsonResult.Value);
+      var kid = System.Text.Encoding.UTF8.GetString(Bytes);
       return Result<string>.Ok(Base64UrlEncoder.Encode(Bytes));
     }
   }
